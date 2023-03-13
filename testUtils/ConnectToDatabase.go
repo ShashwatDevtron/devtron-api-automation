@@ -10,27 +10,18 @@ const (
 	host                  = "localhost"
 	port                  = 5432
 	user                  = "postgres"
-	password              = ""
+	password              = "SnkPekgXpSob73ANUKSTLNMgAJIWr3Pp"
 	dbname                = "orchestrator"
 	GETDATA               = "GetData"
 	UPDATE_OR_DELETE_DATA = "UpdateOrDeleteData"
 	INSERT_DATA           = "InsertData"
 )
 
-func ConnectToDB(queryType string, query string) {
+func ConnectToDB() *sql.DB {
 	psqlConn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
-
 	db, err := sql.Open("postgres", psqlConn)
 	CheckError(err)
-	switch queryType {
-	case GETDATA:
-		GetData(db, query)
-	case UPDATE_OR_DELETE_DATA:
-		UpdateDeleteData(db, query)
-	case INSERT_DATA:
-		InsertData(db, query)
-	}
-	defer db.Close()
+	return db
 }
 
 func UpdateDeleteData(db *sql.DB, deleteOrUpdateStmt string) {
@@ -38,9 +29,11 @@ func UpdateDeleteData(db *sql.DB, deleteOrUpdateStmt string) {
 	CheckError(e)
 }
 
-func GetData(db *sql.DB, getQuery string) *sql.Rows {
-	rows, err := db.Query(`getQuery`)
+func GetData(getQuery string) *sql.Rows {
+	db := ConnectToDB()
+	rows, err := db.Query(getQuery)
 	CheckError(err)
+	defer db.Close()
 	return rows
 }
 
