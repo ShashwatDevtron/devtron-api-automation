@@ -10,7 +10,7 @@ const (
 	host                  = "localhost"
 	port                  = 5432
 	user                  = "postgres"
-	password              = "SnkPekgXpSob73ANUKSTLNMgAJIWr3Pp"
+	password              = ""
 	dbname                = "orchestrator"
 	GETDATA               = "GetData"
 	UPDATE_OR_DELETE_DATA = "UpdateOrDeleteData"
