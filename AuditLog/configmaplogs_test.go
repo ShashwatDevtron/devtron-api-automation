@@ -2,15 +2,48 @@ package AuditLog
 
 import (
 	"automation-suite/HelperRouter"
+	"automation-suite/PipelineConfigRouter"
 	Base "automation-suite/testUtils"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"log"
+	"strconv"
 	"strings"
 )
 
 func (suite *AuditLogsTestSuite) TestClassToCheckConfigMapLogs() {
+	envConf := Base.ReadBaseEnvConfig()
+	config := Base.ReadAnyJsonFile(envConf.ClassCredentialsFile)
+
+	log.Println("=== Creating a App ===")
 	createAppApiResponse := Base.CreateApp(suite.authToken).Result
+
+	log.Println("=== Creating App Material ===")
+	createAppMaterialRequestDto := PipelineConfigRouter.GetAppMaterialRequestDto(createAppApiResponse.Id, 1, false)
+	appMaterialByteValue, _ := json.Marshal(createAppMaterialRequestDto)
+	createAppMaterialResponse := PipelineConfigRouter.HitCreateAppMaterialApi(appMaterialByteValue, createAppApiResponse.Id, 1, false, suite.authToken)
+
+	log.Println("=== Saving docker build config ===")
+	requestPayloadForSaveAppCiPipeline := PipelineConfigRouter.GetRequestPayloadForSaveAppCiPipeline(createAppApiResponse.Id, config.DockerRegistry, config.DockerRegistry+"/test", config.DockerfilePath, config.DockerfileRepository, config.DockerfileRelativePath, createAppMaterialResponse.Result.Material[0].Id)
+	byteValueOfSaveAppCiPipeline, _ := json.Marshal(requestPayloadForSaveAppCiPipeline)
+	PipelineConfigRouter.HitSaveAppCiPipeline(byteValueOfSaveAppCiPipeline, suite.authToken)
+
+	log.Println("=== Fetching latestChartReferenceId ===")
+	getChartReferenceResponse := PipelineConfigRouter.HitGetChartReferenceViaAppId(strconv.Itoa(createAppApiResponse.Id), suite.authToken)
+	latestChartRef := getChartReferenceResponse.Result.LatestChartRef
+
+	log.Println("=== Fetching DefaultAppOverride using getAppTemplateAPI ===")
+	getTemplateResponse := PipelineConfigRouter.HitGetTemplateViaAppIdAndChartRefId(strconv.Itoa(createAppApiResponse.Id), strconv.Itoa(latestChartRef), suite.authToken)
+
+	log.Println("=== Fetching DefaultAppOverride using getAppTemplateAPI ===")
+	defaultAppOverride := getTemplateResponse.Result.GlobalConfig.DefaultAppOverride
+
+	log.Println("=== Creating payload for SaveTemplate API ===")
+	saveDeploymentTemplate := PipelineConfigRouter.GetRequestPayloadForSaveDeploymentTemplate(createAppApiResponse.Id, latestChartRef, defaultAppOverride)
+	byteValueOfSaveDeploymentTemplate, _ := json.Marshal(saveDeploymentTemplate)
+
+	log.Println("=== Hitting SaveTemplate API ===")
+	PipelineConfigRouter.HitSaveDeploymentTemplateApi(byteValueOfSaveDeploymentTemplate, suite.authToken)
 
 	suite.Run("ABC", func() {
 
