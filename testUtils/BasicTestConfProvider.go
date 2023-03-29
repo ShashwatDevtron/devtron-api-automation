@@ -76,7 +76,7 @@ type BaseClassEnvironmentConfig struct {
 	GitUsername            string `json:"GIT_USERNAME"`
 	Host                   string `json:"HOST"`
 	GitToken               string `json:"GIT_TOKEN"`
-	GitHubOrgId            string `json:"GITHUB_ORG_ID"`
+	GitHubOrgId            int    `json:"GITHUB_ORG_ID"`
 	PluginId               string `json:"PLUGIN_ID"`
 	RegistryType           string `json:"REGISTRY_TYPE"`
 	RegistryUrl            string `json:"REGISTRY_URL"`
@@ -90,6 +90,10 @@ type BaseClassEnvironmentConfig struct {
 	DockerfilePath         string `json:"DOCKER_FILE_PATH" `
 	DockerfileRepository   string `json:"DOCKER_FILE_REPO" `
 	DockerfileRelativePath string `json:"DOCKER_FILE_RELATIVE_PATH"`
+	SshPrivateKey          string `json:"SSH_PRIVATE_KEY"`
+	AccessToken            string `json:"ACCESS_TOKEN"`
+	AuthMode               string `json:"AUTH_MODE"`
+	Name                   string `json:"NAME"`
 }
 
 func getRestyClient() *resty.Client {
@@ -232,8 +236,8 @@ func ReadAnyJsonFile(filename string) BaseClassEnvironmentConfig {
 }
 
 type BaseEnvConfigStruct struct {
-	BaseCredentialsFile  string `env:"BASE_CREDENTIALS_FILE" envDefault:"/base-test/credentials.json"`
-	ClassCredentialsFile string `env:"CLASS_CREDENTIALS_FILE" envDefault:"/class-test/credentials.json"`
+	BaseCredentialsFile  string `env:"BASE_CREDENTIALS_FILE" envDefault:"../testUtils/credentials.json"`
+	ClassCredentialsFile string `env:"CLASS_CREDENTIALS_FILE" envDefault:"../testUtils/credentials.json"`
 }
 
 func ReadBaseEnvConfig() *BaseEnvConfigStruct {
