@@ -43,8 +43,13 @@ func (suite *GitProRouterTestSuite) TestClassA6GetApp() {
 		HitDeleteGitProviderApi(byteValueOfDeleteGitProvider, suite.authToken)
 	})
 
+	log.Println("getting payload for Update git provider API")
+	byteValueOfUpdateDockerRegistry := GetPayLoadForUpdateGitProviderAPI(saveGitProviderResponseDto.Result.Id, saveGitProviderResponseDto.Result.GitHostId)
+	log.Println("Hitting the Update Git API for Removing the data created via automation")
+	HitUpdateGitProviderApi(byteValueOfUpdateDockerRegistry, suite.authToken)
+
 	log.Println("getting payload for Delete git provider API")
 	byteValueOfDeleteDockerRegistry := GetPayLoadForDeleteGitProviderAPI(saveGitProviderResponseDto.Result.Id, saveGitProviderResponseDto.Result.GitHostId, saveGitProviderResponseDto.Result.Url, saveGitProviderResponseDto.Result.AuthMode, saveGitProviderResponseDto.Result.Name)
-	log.Println("Hitting the Delete team API for Removing the data created via automation")
+	log.Println("Hitting the Delete Git API for Removing the data created via automation")
 	HitDeleteGitProviderApi(byteValueOfDeleteDockerRegistry, suite.authToken)
 }
