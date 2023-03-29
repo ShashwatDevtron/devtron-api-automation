@@ -17,4 +17,7 @@ const (
 	CreateRoleGroupApiUrl     string = "/orchestrator/user/role/group"
 	GetRoleGroupByIdApiUrl    string = "/orchestrator/user/role/group/"
 	DeleteRoleGroupByIdApiUrl string = "/orchestrator/user/role/group/"
+	PROJECT                   string = "testAsh29"
+	ENV                       string = "envtestAsh29"
+	APP                       string = "app-test-ash29"
 )
