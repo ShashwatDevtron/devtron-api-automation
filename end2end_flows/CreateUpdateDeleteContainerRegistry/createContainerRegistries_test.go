@@ -6,7 +6,6 @@ import (
 	"automation-suite/dockerRegRouter/ResponseDTOs"
 	Base "automation-suite/testUtils"
 	"encoding/json"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"strconv"
@@ -23,12 +22,12 @@ func (suite *CreateContainerRegistryFlowsTestSuite) Test() {
 		saveDockerRegistryRequestDto := dockerRegRouter.GetDockerRegistryRequestDto(false)
 		byteValueOfSaveDockerRegistry, _ = json.Marshal(saveDockerRegistryRequestDto)
 
-		log.Println("Hitting The post Docker registry API")
+		log.Println("=== Hitting The post Docker registry API ===")
 		saveDockerRegistryResponseDto = dockerRegRouter.HitSaveContainerRegistryApi(byteValueOfSaveDockerRegistry, suite.authToken)
 
 		newGetAllDockerRegistryResponseDto := dockerRegRouter.HitGetAllDockerRegistryApi(suite.authToken)
 		assert.Equal(suite.T(), len(newGetAllDockerRegistryResponseDto.Result), len(getAllDockerRegistryResponseDto.Result)+1)
-		log.Println("Validating the Response of the save docker registry API...")
+		log.Println("=== Validating the Response of the save docker registry API... === ")
 		assert.Equal(suite.T(), saveDockerRegistryRequestDto.Id, saveDockerRegistryResponseDto.Result.Id)
 		assert.Equal(suite.T(), saveDockerRegistryRequestDto.IsDefault, saveDockerRegistryResponseDto.Result.IsDefault)
 
@@ -67,22 +66,35 @@ func (suite *CreateContainerRegistryFlowsTestSuite) Test() {
 
 		log.Println("=== Hitting SaveTemplate API ===")
 		PipelineConfigRouter.HitSaveDeploymentTemplateApi(byteValueOfSaveDeploymentTemplate, suite.authToken)
+
 		log.Println("=== Hitting CreateWorkFlow API ===")
 		workflowResponse := PipelineConfigRouter.HitCreateWorkflowApiWithFullPayload(createAppApiResponse.Id, suite.authToken).Result
+
 		log.Println("=== Hitting GetCiPipelineMaterial API ===")
 		pipelineMaterial := PipelineConfigRouter.HitGetCiPipelineMaterial(workflowResponse.CiPipelines[0].Id, suite.authToken)
 		payloadForTriggerCiPipeline := PipelineConfigRouter.CreatePayloadForTriggerCiPipeline(pipelineMaterial.Result[0].History[0].Commit, workflowResponse.CiPipelines[0].Id, pipelineMaterial.Result[0].Id, true)
 		bytePayloadForTriggerCiPipeline, _ := json.Marshal(payloadForTriggerCiPipeline)
+
 		log.Println("=== Hitting TriggerCiPipeline API ===")
 		triggerCiPipelineResponse := PipelineConfigRouter.HitTriggerCiPipelineApi(bytePayloadForTriggerCiPipeline, suite.authToken)
-		fmt.Println(triggerCiPipelineResponse)
-		//PipelineConfigRouter.HitGetWorkflowStatus()
-
 		time.After(60 * time.Second)
+
+		log.Println("=== Reading Logs ===")
 		suite.checkForCiLogs(strconv.Itoa(workflowResponse.CiPipelines[0].Id), triggerCiPipelineResponse.Result.ApiResponse, 151, "Login Succeeded")
-		log.Println("getting payload for Delete registry API")
+
+		log.Println("=== Here we are Deleting the CI pipeline ===")
+		PipelineConfigRouter.DeleteCiPipeline(createAppApiResponse.Id, workflowResponse.CiPipelines[0].Id, suite.authToken)
+
+		log.Println("=== Here we are Deleting CI Workflow ===")
+		PipelineConfigRouter.HitDeleteWorkflowApi(createAppApiResponse.Id, workflowResponse.AppWorkflowId, suite.authToken)
+
+		log.Println("=== Here we are Deleting the app after all verifications ===")
+		Base.DeleteApp(createAppApiResponse.Id, createAppApiResponse.AppName, createAppApiResponse.TeamId, createAppApiResponse.TemplateId, suite.authToken)
+
+		log.Println("=== getting payload for Delete registry API ===")
 		byteValueOfDeleteDockerRegistry := dockerRegRouter.GetPayLoadForDeleteDockerRegistryAPI(saveDockerRegistryResponseDto.Result.Id, saveDockerRegistryResponseDto.Result.IpsConfig.Id, saveDockerRegistryResponseDto.Result.PluginId, saveDockerRegistryResponseDto.Result.RegistryUrl, saveDockerRegistryResponseDto.Result.RegistryType, saveDockerRegistryResponseDto.Result.Username, saveDockerRegistryResponseDto.Result.Password, saveDockerRegistryResponseDto.Result.IsDefault)
-		log.Println("Hitting the Delete team API for Removing the data created via automation")
+
+		log.Println("=== Hitting the Delete team API for Removing the data created via automation ===")
 		dockerRegRouter.HitDeleteDockerRegistryApi(byteValueOfDeleteDockerRegistry, suite.authToken)
 	})
 
@@ -144,11 +156,16 @@ func (suite *CreateContainerRegistryFlowsTestSuite) Test() {
 		bytePayloadForTriggerCiPipeline, _ := json.Marshal(payloadForTriggerCiPipeline)
 		log.Println("=== Hitting TriggerCiPipeline API ===")
 		triggerCiPipelineResponse := PipelineConfigRouter.HitTriggerCiPipelineApi(bytePayloadForTriggerCiPipeline, suite.authToken)
-		fmt.Println(triggerCiPipelineResponse)
-		//PipelineConfigRouter.HitGetWorkflowStatus()
+		log.Println("=== Reading Logs ===")
+		suite.checkForCiLogs(strconv.Itoa(workflowResponse.CiPipelines[0].Id), triggerCiPipelineResponse.Result.ApiResponse, 151, "Login Succeeded")
+		log.Println("=== Here we are Deleting the CI pipeline ===")
+		PipelineConfigRouter.DeleteCiPipeline(createAppApiResponse.Id, workflowResponse.CiPipelines[0].Id, suite.authToken)
 
-		time.After(60 * time.Second)
-		suite.checkForCiLogs(strconv.Itoa(workflowResponse.CiPipelines[0].Id), triggerCiPipelineResponse.Result.ApiResponse, 147, "Error response from daemon: Get \"https://registry-1.docker.io/v2/\": unauthorized: incorrect username or password")
+		log.Println("=== Here we are Deleting CI Workflow ===")
+		PipelineConfigRouter.HitDeleteWorkflowApi(createAppApiResponse.Id, workflowResponse.AppWorkflowId, suite.authToken)
+
+		log.Println("=== Here we are Deleting the app after all verifications ===")
+		Base.DeleteApp(createAppApiResponse.Id, createAppApiResponse.AppName, createAppApiResponse.TeamId, createAppApiResponse.TemplateId, suite.authToken)
 		log.Println("getting payload for Delete registry API")
 		byteValueOfDeleteDockerRegistry := dockerRegRouter.GetPayLoadForDeleteDockerRegistryAPI(saveDockerRegistryResponseDto.Result.Id, saveDockerRegistryResponseDto.Result.IpsConfig.Id, saveDockerRegistryResponseDto.Result.PluginId, saveDockerRegistryResponseDto.Result.RegistryUrl, saveDockerRegistryResponseDto.Result.RegistryType, saveDockerRegistryResponseDto.Result.Username, saveDockerRegistryResponseDto.Result.Password, saveDockerRegistryResponseDto.Result.IsDefault)
 		log.Println("Hitting the Delete team API for Removing the data created via automation")
