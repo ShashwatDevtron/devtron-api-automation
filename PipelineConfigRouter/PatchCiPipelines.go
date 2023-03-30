@@ -389,7 +389,7 @@ func (suite *PipelinesConfigRouterTestSuite) TestClassC7CreateWorkflowBranchFixe
 	})
 
 	suite.Run("A=12=PatchCiPipelineWithFullPayload", func() {
-		createWorkflowResponseDto := HitCreateWorkflowApiWithFullPayload(appId, suite.authToken)
+		createWorkflowResponseDto := HitCreateWorkflowApiWithFullPayload(appId, suite.authToken, nil)
 		log.Println("Validating pre-build request payload")
 		assert.Equal(suite.T(), appId, createWorkflowResponseDto.Result.AppId)
 		log.Println("=== Here we are Deleting the CI pipeline ===")

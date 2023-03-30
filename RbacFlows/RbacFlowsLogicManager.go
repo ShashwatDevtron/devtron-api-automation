@@ -2,6 +2,7 @@ package RbacFlows
 
 import (
 	"automation-suite/EnvironmentRouter"
+	Request "automation-suite/EnvironmentRouter/RequestDTOs"
 	EnvironmentRouterResponseDTOs "automation-suite/EnvironmentRouter/ResponseDTOs"
 	"automation-suite/PipelineConfigRouter"
 	"automation-suite/TeamRouter"
@@ -116,6 +117,18 @@ func CreateHelmApp() {
 }
 func DeleteHelmApp() {
 
+}
+
+func GetSaveEnvRequestDto() Request.CreateEnvironmentRequestDTO {
+	var saveEnvRequestDto Request.CreateEnvironmentRequestDTO
+	EnvName := Base.GetRandomStringOfGivenLength(10)
+	saveEnvRequestDto.Environment = EnvName
+	saveEnvRequestDto.Active = true
+	namespace := Base.GetRandomStringOfGivenLengthOfLowerCaseAndNumber(10)
+	saveEnvRequestDto.Namespace = namespace
+	saveEnvRequestDto.ClusterId = 1
+
+	return saveEnvRequestDto
 }
 
 type RbacFlowTestSuite struct {

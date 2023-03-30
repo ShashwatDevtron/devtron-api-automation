@@ -56,7 +56,7 @@ func (suite *PipelinesConfigRouterTestSuite) TestClassB8GetCdPipeline() {
 	HelperRouter.HitSaveGlobalSecretApi(byteValueOfSecret, suite.authToken)
 
 	log.Println("=== Here we are saving workflow with Pre/Post CI ===")
-	workflowResponse := HitCreateWorkflowApiWithFullPayload(createAppApiResponse.Id, suite.authToken).Result
+	workflowResponse := HitCreateWorkflowApiWithFullPayload(createAppApiResponse.Id, suite.authToken, nil).Result
 	time.Sleep(1 * time.Second)
 
 	preStageScript, _ := Base.GetByteArrayOfGivenJsonFile("../testdata/PipeLineConfigRouter/preStageScript.txt")

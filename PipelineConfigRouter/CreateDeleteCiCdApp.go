@@ -75,7 +75,7 @@ func CreateNewAppWithCiCd(authToken string) (testUtils.CreateAppRequestDto, dtos
 	HelperRouter.HitSaveGlobalSecretApi(byteValueOfSecret, authToken)
 
 	log.Println("=== Here we are saving workflow with Pre/Post CI ===")
-	workflowResponse := HitCreateWorkflowApiWithFullPayload(createAppApiResponse.Id, authToken)
+	workflowResponse := HitCreateWorkflowApiWithFullPayload(createAppApiResponse.Id, authToken, nil)
 	preStageScript, _ := testUtils.GetByteArrayOfGivenJsonFile("../testdata/PipeLineConfigRouter/preStageScript.txt")
 	postStageScript, _ := testUtils.GetByteArrayOfGivenJsonFile("../testdata/PipeLineConfigRouter/postStageScript.txt")
 

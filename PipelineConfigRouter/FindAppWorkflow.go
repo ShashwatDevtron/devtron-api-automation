@@ -38,7 +38,7 @@ func (suite *PipelinesConfigRouterTestSuite) TestClassC8GetWorkflows() {
 	createWorkflowRequestDto.CiPipeline.CiMaterial[0].GitMaterialId = fetchAppGetResponseDto.Result.Material[0].Id
 	createWorkflowRequestDto.CiPipeline.Name = fetchSuggestedCiPipelineName.Result
 	createWorkflowRequestDto.CiPipeline.CiMaterial[0].Source.Value = strings.ToLower(testUtils.GetRandomStringOfGivenLength(10))
-	createWorkflowResponseDto := HitCreateWorkflowApiWithFullPayload(appId, suite.authToken)
+	createWorkflowResponseDto := HitCreateWorkflowApiWithFullPayload(appId, suite.authToken, nil)
 
 	suite.Run("A=1=FetchAllAppWorkflowWithValidAppId", func() {
 		fetchAllAppWorkflowResponseDto := FetchAllAppWorkflow(appId, suite.authToken)

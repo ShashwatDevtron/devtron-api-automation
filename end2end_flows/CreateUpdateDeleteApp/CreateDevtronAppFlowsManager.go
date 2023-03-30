@@ -21,7 +21,7 @@ func CreatePayloadForDevtronApp(appName string, teamId int, templateId int, labe
 	return PipelineConfigRouter.GetPayloadForCreateDevtronApp(appName, teamId, templateId, labels)
 }
 
-func CreatDevtronApp(payload []byte, appName string, teamId int, templateId int, authToken string) PipelineConfigRouter.CreateAppResponseDto {
+func CreateDevtronApp(payload []byte, appName string, teamId int, templateId int, authToken string) PipelineConfigRouter.CreateAppResponseDto {
 	return PipelineConfigRouter.HitCreateDevtronAppApi(payload, authToken)
 }
 

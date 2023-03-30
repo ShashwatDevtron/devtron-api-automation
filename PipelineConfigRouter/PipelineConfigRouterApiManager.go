@@ -1123,9 +1123,9 @@ func inputVariablesSelector(inputType int) RequestDTOs.InputVariables {
 	return inputVariable
 }
 
-func HitCreateWorkflowApiWithFullPayload(appId int, authToken string) ResponseDTOs.CreateWorkflowResponseDto {
+func HitCreateWorkflowApiWithFullPayload(appId int, authToken string, allBranches []string) ResponseDTOs.CreateWorkflowResponseDto {
 	var createWorkflowRequestDto RequestDTOs.CreateWorkflowRequestDto
-	configFile, err := os.Open("../testdata/PipeLineConfigRouter/CreateWorkflow/CreateWorkflowPreAndPostBuildRequestPayload.json")
+	configFile, err := os.Open("../../testdata/PipeLineConfigRouter/CreateWorkflow/CreateWorkflowPreAndPostBuildRequestPayload.json")
 	if err != nil {
 		panic(err)
 	}
@@ -1144,9 +1144,12 @@ func HitCreateWorkflowApiWithFullPayload(appId int, authToken string) ResponseDT
 	fetchAppGetResponseDto := HitGetApp(appId, authToken)
 
 	branchValue := "main"
-
-	for _, j := range fetchAppGetResponseDto.Result.Material {
-
+	for index, j := range fetchAppGetResponseDto.Result.Material {
+		if allBranches == nil || len(allBranches) < index || allBranches[index] == "" {
+			branchValue = "main"
+		} else {
+			branchValue = allBranches[index]
+		}
 		var CiMaterial RequestDTOs.CiMaterial
 		CiMaterial.GitMaterialId = j.Id
 		CiMaterial.Source.Type = expectedPayload.CiPipeline.CiMaterial[0].Source.Type
