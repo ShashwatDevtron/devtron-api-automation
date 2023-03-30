@@ -299,6 +299,7 @@ type StructPipelineConfigRouter struct {
 	saveAppCiPipelineRequestDTO           RequestDTOs.SaveAppCiPipelineRequestDTO
 	getCiPipelineViaIdResponseDTO         ResponseDTOs.GetCiPipelineViaIdResponseDTO
 	getGitAccountsAutocompleteResponseDTO ResponseDTOs.GetGitAccountsAutocompleteResponseDTO
+	getAppDetailByAppIDEnvId              ResponseDTOs.GetAppDetail
 }
 
 /*type EnvironmentConfigPipelineConfigRouter struct {
@@ -848,6 +849,8 @@ func (structPipelineConfigRouter StructPipelineConfigRouter) UnmarshalGivenRespo
 		json.Unmarshal(response, &structPipelineConfigRouter.refreshMaterialsResponseDTO)
 	case GitListAutocompleteApi:
 		json.Unmarshal(response, &structPipelineConfigRouter.getGitAccountsAutocompleteResponseDTO)
+	case GetAppDetailApi:
+		json.Unmarshal(response, &structPipelineConfigRouter.getAppDetailByAppIDEnvId)
 	}
 	return structPipelineConfigRouter
 }
@@ -1125,7 +1128,7 @@ func inputVariablesSelector(inputType int) RequestDTOs.InputVariables {
 
 func HitCreateWorkflowApiWithFullPayload(appId int, authToken string) ResponseDTOs.CreateWorkflowResponseDto {
 	var createWorkflowRequestDto RequestDTOs.CreateWorkflowRequestDto
-	configFile, err := os.Open("../testdata/PipeLineConfigRouter/CreateWorkflow/CreateWorkflowPreAndPostBuildRequestPayload.json")
+	configFile, err := os.Open("../../testdata/PipeLineConfigRouter/CreateWorkflow/CreateWorkflowPreAndPostBuildRequestPayload.json")
 	if err != nil {
 		panic(err)
 	}
@@ -1293,4 +1296,11 @@ func GetAppDeploymentStatusTimeline(appId int, envId int, authToken string) Resp
 	structPipelineConfigRouter := StructPipelineConfigRouter{}
 	pipelineConfigRouter := structPipelineConfigRouter.UnmarshalGivenResponseBody(resp.Body(), FetchAllAppWorkflowApi)
 	return pipelineConfigRouter.getAppDeploymentStatusTimelineDto
+}
+func GetAppDetail(queryparams map[string]string, authToken string) ResponseDTOs.GetAppDetail {
+	resp, err := Base.MakeApiCall(GetAppDetailUrl, http.MethodGet, "", queryparams, authToken)
+	Base.HandleError(err, GetAppDetailApi)
+	StructPipelineConfigRouter := StructPipelineConfigRouter{}
+	pipelineConfigRouter := StructPipelineConfigRouter.UnmarshalGivenResponseBody(resp.Body(), GetAppDetailApi)
+	return pipelineConfigRouter.getAppDetailByAppIDEnvId
 }

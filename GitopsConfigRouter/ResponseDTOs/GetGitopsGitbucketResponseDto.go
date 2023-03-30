@@ -22,3 +22,8 @@ type FetchAllGitopsConfigResponseDto struct {
 	Status string                                     `json:"status"`
 	Result []RequestDTOs.CreateGitopsConfigRequestDto `json:"result"`
 }
+type FetchGitopsConfigResponseByIdDto struct {
+	Code   int    `json:"code"`
+	Status string `json:"status"`
+	Result RequestDTOs.CreateGitopsConfigRequestDto
+}

@@ -7,4 +7,6 @@ const (
 	CheckGitopsConfigExistsApiUrl string = "/orchestrator/gitops/configured"
 	CheckGitopsConfigExistsApi    string = "CheckGitopsConfigExistsApi"
 	UpdateGitopsConfigApi         string = "UpdateGitopsConfigApi"
+	FetchGitopsConfigByIdApi      string = "FetchGitopsConfigByIdApi  "
+	ValidateGitopsConfigApi       string = "/orchestrator/gitops/validate"
 )

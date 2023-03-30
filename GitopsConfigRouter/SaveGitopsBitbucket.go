@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func (suite *GitOpsRouterTestSuite) TestClassA3SaveGitopsConfig() {
+func (suite *GitOpsRouterTestSuite) TestClassA6SaveGitopsConfig() {
 
 	suite.Run("A=1=CreateGitopsConfigWithValidPayload", func() {
 		//gitopsConfig, _ := GetGitopsConfig()
