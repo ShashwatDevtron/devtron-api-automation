@@ -66,6 +66,7 @@ const (
 	GetAppDeploymentStatusTimelineApiUrl      string = "/orchestrator/app/deployment-status/timeline/"
 	GetAppDetailUrl                           string = "/orchestrator/app/detail/"
 	GetAppDetailApi                           string = "GetAppDetailApi"
+	GetBuildHistoryLogsUrl                    string = "orchestrator/app/ci-pipeline/248/workflow/58/logs"
 
 	GitListAutocompleteApi string = "GitListAutocompleteApi"
 
