@@ -33,8 +33,10 @@ type GetAppDeploymentStatusTimelineDTO struct {
 				TimelineStage                string `json:"timelineStage,omitempty"`
 			} `json:"resourceDetails,omitempty"`
 		} `json:"timelines"`
-		StatusLastFetchedAt time.Time `json:"statusLastFetchedAt"`
-		StatusFetchCount    int       `json:"statusFetchCount"`
+		StatusLastFetchedAt        time.Time `json:"statusLastFetchedAt"`
+		StatusFetchCount           int       `json:"statusFetchCount"`
+		WorkFlowStatus             string    `json:"wfrStatus"`
+		DeploymentAppDeleteRequest bool      `json:"deploymentAppDeleteRequest"`
 	} `json:"result"`
 	Error []Base.Errors `json:"errors"`
 }

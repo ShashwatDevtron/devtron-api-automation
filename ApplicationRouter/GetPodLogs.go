@@ -30,7 +30,7 @@ func (suite *ApplicationsRouterTestSuite) TestGetPodLogs() {
 	pipelineMaterial := PipelineConfigRouter.HitGetCiPipelineMaterial(ciPipelineId, suite.authToken)
 	time.Sleep(5 * time.Second)
 	log.Println("=== Here we are Triggering CI/CD and verifying CI/CD Deploy Status ===")
-	ciWorkflowId = triggerAndVerifyCiPipeline(createAppApiResponse, pipelineMaterial, ciPipelineId, suite)
+	ciWorkflowId = TriggerAndVerifyCiPipeline(createAppApiResponse, pipelineMaterial, ciPipelineId, suite)
 	//}
 	log.Println("=== Here we are getting ResourceTree ===")
 	ResourceTreeApiResponse := HitGetResourceTreeApi(createAppApiResponse.AppName, suite.authToken)

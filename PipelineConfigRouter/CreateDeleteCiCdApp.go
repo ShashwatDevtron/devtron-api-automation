@@ -37,7 +37,7 @@ func CreateNewAppWithCiCd(authToken string) (testUtils.CreateAppRequestDto, dtos
 	createAppMaterialResponse := HitCreateAppMaterialApi(appMaterialByteValue, createAppApiResponse.Id, 1, false, authToken)
 
 	log.Println("=== Here we are saving docker build config ===")
-	requestPayloadForSaveAppCiPipeline := GetRequestPayloadForSaveAppCiPipeline(createAppApiResponse.Id, file.DockerRegistry, "test", file.DockerfilePath, file.DockerfileRepository, file.DockerfileRelativePath, createAppMaterialResponse.Result.Material[0].Id)
+	requestPayloadForSaveAppCiPipeline := GetRequestPayloadForSaveAppCiPipeline(createAppApiResponse.Id, file.DockerRegistry, file.DockerUsername+"/test", file.DockerfilePath, file.DockerfileRepository, file.DockerfileRelativePath, createAppMaterialResponse.Result.Material[0].Id)
 	byteValueOfSaveAppCiPipeline, _ := json.Marshal(requestPayloadForSaveAppCiPipeline)
 	HitSaveAppCiPipeline(byteValueOfSaveAppCiPipeline, authToken)
 

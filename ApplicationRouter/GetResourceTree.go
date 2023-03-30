@@ -24,7 +24,7 @@ func (suite *ApplicationsRouterTestSuite) TestClassGetResourceTree() {
 		pipelineMaterial := PipelineConfigRouter.HitGetCiPipelineMaterial(workflowResponse.Result.CiPipelines[0].Id, suite.authToken)
 		log.Println("=== Here we are Triggering CI/CD and verifying CI/CD Deploy Status ===")
 		time.Sleep(10 * time.Second)
-		triggerAndVerifyCiPipeline(createAppApiResponse, pipelineMaterial, workflowResponse.Result.CiPipelines[0].Id, suite)
+		TriggerAndVerifyCiPipeline(createAppApiResponse, pipelineMaterial, workflowResponse.Result.CiPipelines[0].Id, suite)
 	}
 
 	suite.Run("A=1=GetResourceTreeWithValidAppName", func() {
@@ -46,7 +46,7 @@ func (suite *ApplicationsRouterTestSuite) TestClassGetResourceTree() {
 	//PipelineConfigRouter.DeleteAppWithCiCd(suite.authToken)
 }
 
-func triggerAndVerifyCiPipeline(createAppApiResponse Base.CreateAppRequestDto, pipelineMaterial PipelineConfigRouterResponseDTOs.GetCiPipelineMaterialResponseDTO, CiPipelineID int, suite *ApplicationsRouterTestSuite) string {
+func TriggerAndVerifyCiPipeline(createAppApiResponse Base.CreateAppRequestDto, pipelineMaterial PipelineConfigRouterResponseDTOs.GetCiPipelineMaterialResponseDTO, CiPipelineID int, suite *ApplicationsRouterTestSuite) string {
 	if ciTriggerWorkflowIdPtr != nil {
 		return *ciTriggerWorkflowIdPtr
 	}

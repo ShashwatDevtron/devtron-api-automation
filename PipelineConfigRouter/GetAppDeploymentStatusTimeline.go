@@ -1,118 +1,88 @@
 package PipelineConfigRouter
 
-//todo first I have to finish this as this is incomplete
-/*func (suite *PipelinesConfigRouterTestSuite) TestGetAppDeploymentStatusTimeline() {
+import (
+	PipelineConfigRouterResponseDTOs "automation-suite/PipelineConfigRouter/ResponseDTOs"
+	Base "automation-suite/testUtils"
+	"github.com/stretchr/testify/assert"
 
-	config, _ := GetEnvironmentConfigPipelineConfigRouter()
-	var configId int
-	log.Println("=== Here we are creating a App ===")
-	createAppApiResponse := Base.CreateApp(suite.authToken).Result
+	"encoding/json"
+	"log"
+	"time"
+)
 
-	log.Println("=== Here we are creating App Material ===")
-	createAppMaterialRequestDto := GetAppMaterialRequestDto(createAppApiResponse.Id, 1, false)
-	appMaterialByteValue, _ := json.Marshal(createAppMaterialRequestDto)
-	createAppMaterialResponse := HitCreateAppMaterialApi(appMaterialByteValue, createAppApiResponse.Id, 1, false, suite.authToken)
+var ciTriggerWorkflowIdPtr *string
 
-	log.Println("=== Here we are saving docker build config ===")
-	requestPayloadForSaveAppCiPipeline := GetRequestPayloadForSaveAppCiPipeline(createAppApiResponse.Id, config.DockerRegistry, config.DockerRegistry+"/test", config.DockerfilePath, config.DockerfileRepository, config.DockerfileRelativePath, createAppMaterialResponse.Result.Material[0].Id)
-	byteValueOfSaveAppCiPipeline, _ := json.Marshal(requestPayloadForSaveAppCiPipeline)
-	HitSaveAppCiPipeline(byteValueOfSaveAppCiPipeline, suite.authToken)
+func (suite *PipelinesConfigRouterTestSuite) TestGetAppDeploymentStatusTimeline() {
+	createAppApiResponse, workflowResponse := CreateNewAppWithCiCd(suite.authToken)
 
-	log.Println("=== Here we are fetching latestChartReferenceId ===")
-	getChartReferenceResponse := HitGetChartReferenceViaAppId(strconv.Itoa(createAppApiResponse.Id), suite.authToken)
-	latestChartRef := getChartReferenceResponse.Result.LatestChartRef
-
-	log.Println("=== Here we are fetching DefaultAppOverride using getAppTemplateAPI ===")
-	getTemplateResponse := HitGetTemplateViaAppIdAndChartRefId(strconv.Itoa(createAppApiResponse.Id), strconv.Itoa(latestChartRef), suite.authToken)
-
-	log.Println("=== Here we are fetching DefaultAppOverride using getAppTemplateAPI ===")
-	defaultAppOverride := getTemplateResponse.Result.GlobalConfig.DefaultAppOverride
-
-	log.Println("=== Here we are creating payload for SaveTemplate API ===")
-	saveDeploymentTemplate := GetRequestPayloadForSaveDeploymentTemplate(createAppApiResponse.Id, latestChartRef, defaultAppOverride)
-	byteValueOfSaveDeploymentTemplate, _ := json.Marshal(saveDeploymentTemplate)
-
-	log.Println("=== Here we are hitting SaveTemplate API ===")
-	HitSaveDeploymentTemplateApi(byteValueOfSaveDeploymentTemplate, suite.authToken)
-
-	log.Println("=== Here we are saving Global Configmap ===")
-
-	requestPayloadForConfigMap := HelperRouter.GetRequestPayloadForSecretOrConfig(0, "-config1", createAppApiResponse.Id, "environment", "kubernetes", false, false, false, false)
-	byteValueOfSaverConfigMap, _ := json.Marshal(requestPayloadForConfigMap)
-	globalConfigMap := HelperRouter.HitSaveGlobalConfigMap(byteValueOfSaverConfigMap, suite.authToken)
-	configId = globalConfigMap.Result.Id
-
-	log.Println("=== Here we are saving Global Secret ===")
-	requestPayloadForSecret := HelperRouter.GetRequestPayloadForSecretOrConfig(configId, "-secret1", createAppApiResponse.Id, "environment", "kubernetes", false, false, true, false)
-	byteValueOfSecret, _ := json.Marshal(requestPayloadForSecret)
-	HelperRouter.HitSaveGlobalSecretApi(byteValueOfSecret, suite.authToken)
-
-	log.Println("=== Here we are saving workflow with Pre/Post CI ===")
-
-	workflowResponse := HitCreateWorkflowApiWithFullPayload(createAppApiResponse.Id, suite.authToken).Result
-
-	preStageScript, _ := Base.GetByteArrayOfGivenJsonFile("../testdata/PipeLineConfigRouter/preStageScript.txt")
-	postStageScript, _ := Base.GetByteArrayOfGivenJsonFile("../testdata/PipeLineConfigRouter/postStageScript.txt")
-
-	log.Println("=== Here we are saving CD pipeline ===")
-	payload := GetRequestPayloadForSaveCdPipelineApi(createAppApiResponse.Id, workflowResponse.AppWorkflowId, 1, workflowResponse.CiPipelines[0].Id, workflowResponse.CiPipelines[0].ParentCiPipeline, Automatic, string(preStageScript), string(postStageScript), Automatic)
-	bytePayload, _ := json.Marshal(payload)
-	savePipelineResponse := HitSaveCdPipelineApi(bytePayload, suite.authToken)
-
-	//write the test cases here
 	time.Sleep(2 * time.Second)
-	suite.Run("TestDeploymentInitiation", func() {
-		apiResponse := GetAppDeploymentStatusTimeline(createAppApiResponse.Id, 1, suite.authToken)
+	log.Println("=== Here we are getting workflow status material ===")
+	updatedWorkflowStatus := HitGetWorkflowStatus(createAppApiResponse.Id, suite.authToken)
+	if updatedWorkflowStatus.Result.CdWorkflowStatus[0].DeployStatus == "Not Deployed" || updatedWorkflowStatus.Code != 200 {
+		log.Println("=== Here we are getting pipeline material ===")
+		pipelineMaterial := HitGetCiPipelineMaterial(workflowResponse.Result.CiPipelines[0].Id, suite.authToken)
+		log.Println("=== Here we are Triggering CI/CD and verifying CI/CD Deploy Status ===")
+		time.Sleep(10 * time.Second)
+		TriggerAndVerifyCiPipeline(createAppApiResponse, pipelineMaterial, workflowResponse.Result.CiPipelines[0].Id, suite)
+	}
+	//write tests with invalid git-ops configuration
+	//end of test cases
+	//DeleteAppWithCiCd(suite.authToken)
+}
+
+func TriggerAndVerifyCiPipeline(createAppApiResponse Base.CreateAppRequestDto, pipelineMaterial PipelineConfigRouterResponseDTOs.GetCiPipelineMaterialResponseDTO, CiPipelineID int, suite *PipelinesConfigRouterTestSuite) string {
+	if ciTriggerWorkflowIdPtr != nil {
+		return *ciTriggerWorkflowIdPtr
+	}
+
+	ciTriggerWorkflowId := ""
+	payloadForTriggerCiPipeline := CreatePayloadForTriggerCiPipeline(pipelineMaterial.Result[0].History[0].Commit, CiPipelineID, pipelineMaterial.Result[0].Id, true)
+	bytePayloadForTriggerCiPipeline, _ := json.Marshal(payloadForTriggerCiPipeline)
+	triggerCiPipelineResponse := HitTriggerCiPipelineApi(bytePayloadForTriggerCiPipeline, suite.authToken)
+	if triggerCiPipelineResponse.Result.AuthStatus != "allowed for all pipelines" {
+		time.Sleep(2 * time.Second)
+		triggerCiPipelineResponse = HitTriggerCiPipelineApi(bytePayloadForTriggerCiPipeline, suite.authToken)
+		assert.Equal(suite.T(), "allowed for all pipelines", triggerCiPipelineResponse.Result.AuthStatus)
+		assert.NotNil(suite.T(), triggerCiPipelineResponse.Result.ApiResponse)
+	}
+	ciTriggerWorkflowId = triggerCiPipelineResponse.Result.ApiResponse
+	time.Sleep(10 * time.Second)
+	log.Println("=== Here we are getting workflow after triggering ===")
+	workflowStatus := HitGetWorkflowStatus(createAppApiResponse.Id, suite.authToken)
+	if workflowStatus.Result.CiWorkflowStatus[0].CiStatus == "Starting" {
+		time.Sleep(5 * time.Second)
+		workflowStatus = HitGetWorkflowStatus(createAppApiResponse.Id, suite.authToken)
+		assert.Equal(suite.T(), "Running", workflowStatus.Result.CiWorkflowStatus[0].CiStatus)
+	} else {
+		assert.Equal(suite.T(), "Running", workflowStatus.Result.CiWorkflowStatus[0].CiStatus)
+	}
+	log.Println("=== Here we are getting workflow and verifying the status after triggering via poll function ===")
+	assert.True(suite.T(), PollForGettingCdAppStatusAfterTrigger(createAppApiResponse.Id, suite.authToken, suite))
+	apiResponse := GetAppDeploymentStatusTimeline(createAppApiResponse.Id, 1, suite.authToken)
+	time.Sleep(2 * time.Second)
+	suite.Run("TestHealthyDeploymentStatus", func() {
 		assert.NotEqual(suite.T(), nil, apiResponse)
 		assert.Equal(suite.T(), 200, apiResponse.Code)
 		assert.Equal(suite.T(), 0, len(apiResponse.Error))
 		assert.NotEqual(suite.T(), nil, apiResponse.Result)
-		isDeploymentStarted := len(apiResponse.Result.Timelines) > 1
-		assert.Equal(suite.T(), true, isDeploymentStarted)
-		assert.Equal(suite.T(), TIMELINE_STATUS_DEPLOYMENT_INITIATED, apiResponse.Result.Timelines[0])
-		assert.Equal(suite.T(), TIMELINE_STATUS_GIT_COMMIT, apiResponse.Result.Timelines[1])
-	})
-	time.Sleep(2 * time.Second)
-	suite.Run("TestGitCommitSuccessAndKubectlApply", func() {
-		apiResponse := GetAppDeploymentStatusTimeline(createAppApiResponse.Id, 1, suite.authToken)
-		assert.NotEqual(suite.T(), nil, apiResponse)
-		assert.Equal(suite.T(), 200, apiResponse.Code)
-		assert.Equal(suite.T(), 0, len(apiResponse.Error))
-		assert.NotEqual(suite.T(), nil, apiResponse.Result)
-		isDeploymentStarted := len(apiResponse.Result.Timelines) > 2
+		isDeploymentStarted := len(apiResponse.Result.Timelines) == 5
 		assert.Equal(suite.T(), true, isDeploymentStarted)
 		assert.Equal(suite.T(), TIMELINE_STATUS_DEPLOYMENT_INITIATED, apiResponse.Result.Timelines[0].Status)
 		assert.Equal(suite.T(), TIMELINE_STATUS_GIT_COMMIT, apiResponse.Result.Timelines[1].Status)
-		kubectlStatus := apiResponse.Result.Timelines[1].Status == TIMELINE_STATUS_KUBECTL_APPLY_STARTED || apiResponse.Result.Timelines[1].Status == TIMELINE_STATUS_KUBECTL_APPLY_SYNCED
-		assert.Equal(suite.T(), true, kubectlStatus)
-		if apiResponse.Result.Timelines[1].Status == TIMELINE_STATUS_KUBECTL_APPLY_SYNCED {
-			isAtleastOneK8sObjectPresent := len(apiResponse.Result.Timelines[1].ResourceDetails) > 0
-			assert.Equal(suite.T(), true, isAtleastOneK8sObjectPresent)
-			for _, resource := range apiResponse.Result.Timelines[1].ResourceDetails {
-				assert.NotNil(suite.T(), resource.Id)
-				assert.NotNil(suite.T(), resource.ResourceStatus)
-				assert.NotNil(suite.T(), resource.ResourceKind)
-				assert.NotNil(suite.T(), resource.ResourceGroup)
-				assert.NotNil(suite.T(), resource.ResourceName)
-				assert.NotNil(suite.T(), resource.ResourcePhase)
-			}
+		assert.Equal(suite.T(), TIMELINE_STATUS_KUBECTL_APPLY_STARTED, apiResponse.Result.Timelines[2].Status)
+		assert.Equal(suite.T(), TIMELINE_STATUS_KUBECTL_APPLY_SYNCED, apiResponse.Result.Timelines[3].Status)
+		isAtleastOneK8sObjectPresent := len(apiResponse.Result.Timelines[2].ResourceDetails) > 0
+		assert.Equal(suite.T(), true, isAtleastOneK8sObjectPresent)
+		for _, resource := range apiResponse.Result.Timelines[2].ResourceDetails {
+			assert.NotNil(suite.T(), resource.Id)
+			assert.NotNil(suite.T(), resource.ResourceStatus)
+			assert.NotNil(suite.T(), resource.ResourceKind)
+			assert.NotNil(suite.T(), resource.ResourceGroup)
+			assert.NotNil(suite.T(), resource.ResourceName)
+			assert.NotNil(suite.T(), resource.ResourcePhase)
 		}
+		assert.Equal(suite.T(), TIMELINE_STATUS_APP_HEALTHY, apiResponse.Result.Timelines[4].Status)
 	})
-
-	//write tests with invalid git-ops configuration
-	//end of test cases
-
-	//clean created pipelines,materials and app
-	log.Println("=== Here we are Deleting the CD pipeline ===")
-	deletePipelinePayload := GetPayloadForDeleteCdPipeline(createAppApiResponse.Id, savePipelineResponse.Result.Pipelines[0].Id)
-	deletePipelineByteCode, _ := json.Marshal(deletePipelinePayload)
-	HitForceDeleteCdPipelineApi(deletePipelineByteCode, suite.authToken)
-
-	log.Println("=== Here we are Deleting the CI pipeline ===")
-	DeleteCiPipeline(createAppApiResponse.Id, workflowResponse.CiPipelines[0].Id, suite.authToken)
-	log.Println("=== Here we are Deleting CI Workflow ===")
-	HitDeleteWorkflowApi(createAppApiResponse.Id, workflowResponse.AppWorkflowId, suite.authToken)
-	log.Println("=== Here we Deleting the Test data created after verification ===")
-	Base.DeleteApp(createAppApiResponse.Id, createAppApiResponse.AppName, createAppApiResponse.TeamId, createAppApiResponse.TemplateId, suite.authToken)
+	ciTriggerWorkflowIdPtr = &ciTriggerWorkflowId
+	return ciTriggerWorkflowId
 }
-*/

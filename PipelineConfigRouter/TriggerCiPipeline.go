@@ -87,3 +87,87 @@ func PollForGettingCdDeployStatusAfterTrigger(id int, authToken string) bool {
 	}
 	return true
 }
+func PollForGettingCdAppStatusAfterTrigger(id int, authToken string, suite *PipelinesConfigRouterTestSuite) bool {
+	count := 0
+	for {
+		apiResponse := GetAppDeploymentStatusTimeline(id, 1, authToken)
+		time.Sleep(1 * time.Second)
+		count = count + 1
+		if apiResponse.Code == 404 {
+			log.Println("AppTimelineStatus====> Waiting For Deployment")
+		}
+		//write the test cases here
+		if len(apiResponse.Result.Timelines) != 0 {
+			if len(apiResponse.Result.Timelines) >= 1 {
+				suite.Run("TestDeploymentInitiation", func() {
+					assert.NotEqual(suite.T(), nil, apiResponse)
+					assert.Equal(suite.T(), 200, apiResponse.Code)
+					assert.Equal(suite.T(), 0, len(apiResponse.Error))
+					assert.NotEqual(suite.T(), nil, apiResponse.Result)
+					isDeploymentStarted := len(apiResponse.Result.Timelines) > 0
+					assert.Equal(suite.T(), true, isDeploymentStarted)
+					assert.Equal(suite.T(), TIMELINE_STATUS_DEPLOYMENT_INITIATED, apiResponse.Result.Timelines[0].Status)
+				})
+			}
+			if len(apiResponse.Result.Timelines) >= 2 {
+				suite.Run("TestDeploymentGitCommitInitiation", func() {
+					assert.NotEqual(suite.T(), nil, apiResponse)
+					assert.Equal(suite.T(), 200, apiResponse.Code)
+					assert.Equal(suite.T(), 0, len(apiResponse.Error))
+					assert.NotEqual(suite.T(), nil, apiResponse.Result)
+					isDeploymentStarted := len(apiResponse.Result.Timelines) > 1
+					assert.Equal(suite.T(), true, isDeploymentStarted)
+					assert.Equal(suite.T(), TIMELINE_STATUS_DEPLOYMENT_INITIATED, apiResponse.Result.Timelines[0].Status)
+					gitStatus := apiResponse.Result.Timelines[1].Status == TIMELINE_STATUS_GIT_COMMIT || apiResponse.Result.Timelines[1].Status == TIMELINE_STATUS_GIT_COMMIT_FAILED
+					assert.Equal(suite.T(), true, gitStatus)
+				})
+			}
+			if len(apiResponse.Result.Timelines) >= 3 {
+				suite.Run("TestGitCommitSuccessAndKubectlStarted", func() {
+					assert.NotEqual(suite.T(), nil, apiResponse)
+					assert.Equal(suite.T(), 200, apiResponse.Code)
+					assert.Equal(suite.T(), 0, len(apiResponse.Error))
+					assert.NotEqual(suite.T(), nil, apiResponse.Result)
+					isDeploymentStarted := len(apiResponse.Result.Timelines) > 2
+					assert.Equal(suite.T(), true, isDeploymentStarted)
+					assert.Equal(suite.T(), TIMELINE_STATUS_DEPLOYMENT_INITIATED, apiResponse.Result.Timelines[0].Status)
+					assert.Equal(suite.T(), TIMELINE_STATUS_GIT_COMMIT, apiResponse.Result.Timelines[1].Status)
+					kubectlStatus := apiResponse.Result.Timelines[2].Status == TIMELINE_STATUS_KUBECTL_APPLY_STARTED
+					assert.Equal(suite.T(), true, kubectlStatus)
+				})
+			}
+			if len(apiResponse.Result.Timelines) >= 4 {
+				suite.Run("TestGitCommitSuccessAndKubectlApply", func() {
+					assert.NotEqual(suite.T(), nil, apiResponse)
+					assert.Equal(suite.T(), 200, apiResponse.Code)
+					assert.Equal(suite.T(), 0, len(apiResponse.Error))
+					assert.NotEqual(suite.T(), nil, apiResponse.Result)
+					isDeploymentStarted := len(apiResponse.Result.Timelines) > 3
+					assert.Equal(suite.T(), true, isDeploymentStarted)
+					assert.Equal(suite.T(), TIMELINE_STATUS_DEPLOYMENT_INITIATED, apiResponse.Result.Timelines[0].Status)
+					assert.Equal(suite.T(), TIMELINE_STATUS_GIT_COMMIT, apiResponse.Result.Timelines[1].Status)
+					assert.Equal(suite.T(), TIMELINE_STATUS_KUBECTL_APPLY_STARTED, apiResponse.Result.Timelines[2].Status)
+					kubectlStatus := apiResponse.Result.Timelines[3].Status == TIMELINE_STATUS_KUBECTL_APPLY_SYNCED
+					assert.Equal(suite.T(), true, kubectlStatus)
+					isAtleastOneK8sObjectPresent := len(apiResponse.Result.Timelines[2].ResourceDetails) > 0
+					assert.Equal(suite.T(), true, isAtleastOneK8sObjectPresent)
+					for _, resource := range apiResponse.Result.Timelines[2].ResourceDetails {
+						assert.NotNil(suite.T(), resource.Id)
+						assert.NotNil(suite.T(), resource.ResourceStatus)
+						assert.NotNil(suite.T(), resource.ResourceKind)
+						assert.NotNil(suite.T(), resource.ResourceGroup)
+						assert.NotNil(suite.T(), resource.ResourceName)
+						assert.NotNil(suite.T(), resource.ResourcePhase)
+					}
+				})
+			}
+			if len(apiResponse.Result.Timelines) >= 5 && (apiResponse.Result.Timelines[4].Status == TIMELINE_STATUS_APP_HEALTHY || apiResponse.Result.Timelines[4].Status == TIMELINE_STATUS_FETCH_TIMED_OUT) {
+				break
+			}
+		}
+		if count >= 600 {
+			break
+		}
+	}
+	return true
+}

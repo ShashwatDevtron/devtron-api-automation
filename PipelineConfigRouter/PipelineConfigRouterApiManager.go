@@ -3,6 +3,8 @@ package PipelineConfigRouter
 import (
 	"automation-suite/PipelineConfigRouter/RequestDTOs"
 	"automation-suite/PipelineConfigRouter/ResponseDTOs"
+	"errors"
+	"github.com/caarlos0/env"
 	"os"
 	"strings"
 	"testing"
@@ -301,9 +303,9 @@ type StructPipelineConfigRouter struct {
 	getGitAccountsAutocompleteResponseDTO ResponseDTOs.GetGitAccountsAutocompleteResponseDTO
 }
 
-/*type EnvironmentConfigPipelineConfigRouter struct {
+type EnvironmentConfigPipelineConfigRouter struct {
 	GitHubProjectUrl       string `env:"GITHUB_URL_TO_CLONE_PROJECT" envDefault:"https://github.com/devtron-labs/sample-go-app.git"`
-	DockerRegistry         string `env:"DOCKER_REGISTRY" envDefault:"devtron-quay-dpk"`
+	DockerRegistry         string `env:"DOCKER_REGISTRY" envDefault:"asutosh-test"`
 	DockerfilePath         string `env:"DOCKER_FILE_PATH" envDefault:"./Dockerfile"`
 	DockerfileRepository   string `env:"DOCKER_FILE_REPO" envDefault:"sample-go-app"`
 	DockerfileRelativePath string `env:"DOCKER_FILE_RELATIVE_PATH" envDefault:"Dockerfile"`
@@ -317,7 +319,6 @@ func GetEnvironmentConfigPipelineConfigRouter() (*EnvironmentConfigPipelineConfi
 	}
 	return cfg, err
 }
-}*/
 
 func GetAppRequestDto(appName string, teamId int, templateId int) CreateAppRequestDto {
 	var createAppRequestDto CreateAppRequestDto
@@ -824,6 +825,8 @@ func (structPipelineConfigRouter StructPipelineConfigRouter) UnmarshalGivenRespo
 		json.Unmarshal(response, &structPipelineConfigRouter.deleteResponseDto)
 	case FetchAllAppWorkflowApi:
 		json.Unmarshal(response, &structPipelineConfigRouter.fetchAllAppWorkflowResponseDto)
+	case GetAppDeploymentStatusTimelineApi:
+		json.Unmarshal(response, &structPipelineConfigRouter.getAppDeploymentStatusTimelineDto)
 	case SaveCdPipelineApi:
 		json.Unmarshal(response, &structPipelineConfigRouter.saveCdPipelineResponseDTO)
 	case GetAppCdPipelineApi:
@@ -1288,9 +1291,9 @@ func FetchAllAppWorkflow(id int, authToken string) FetchAllAppWorkflowResponseDt
 
 func GetAppDeploymentStatusTimeline(appId int, envId int, authToken string) ResponseDTOs.GetAppDeploymentStatusTimelineDTO {
 	resp, err := Base.MakeApiCall(GetAppDeploymentStatusTimelineApiUrl+strconv.Itoa(appId)+"/"+strconv.Itoa(envId), http.MethodGet, "", nil, authToken)
-	Base.HandleError(err, FetchAllAppWorkflowApi)
+	Base.HandleError(err, GetAppDeploymentStatusTimelineApi)
 
 	structPipelineConfigRouter := StructPipelineConfigRouter{}
-	pipelineConfigRouter := structPipelineConfigRouter.UnmarshalGivenResponseBody(resp.Body(), FetchAllAppWorkflowApi)
+	pipelineConfigRouter := structPipelineConfigRouter.UnmarshalGivenResponseBody(resp.Body(), GetAppDeploymentStatusTimelineApi)
 	return pipelineConfigRouter.getAppDeploymentStatusTimelineDto
 }

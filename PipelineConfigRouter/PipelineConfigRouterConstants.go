@@ -63,7 +63,7 @@ const (
 	RefreshMaterialsApiUrl                    string = "/orchestrator/app/ci-pipeline/refresh-material/"
 	RefreshMaterialsApi                       string = "RefreshMaterialsApi"
 	GetAppDeploymentStatusTimelineApi         string = "GetAppDeploymentStatusTimelineApi"
-	GetAppDeploymentStatusTimelineApiUrl      string = "orchestrator/app/deployment-status/timeline/"
+	GetAppDeploymentStatusTimelineApiUrl      string = "/orchestrator/app/deployment-status/timeline/"
 	GitListAutocompleteApi                    string = "GitListAutocompleteApi"
 
 	TIMELINE_STATUS_DEPLOYMENT_INITIATED   ResponseDTOs.TimelineStatus = "DEPLOYMENT_INITIATED"
