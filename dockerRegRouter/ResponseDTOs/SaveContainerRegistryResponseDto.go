@@ -12,6 +12,13 @@ type SaveDockerRegistryResponseDto struct {
 	Errors []Base.Errors                            `json:"errors"`
 }
 
+type GetAllDockerRegistryResponseDto struct {
+	Code   int                                        `json:"code"`
+	Status string                                     `json:"status"`
+	Result []RequestDTOs.SaveDockerRegistryRequestDTO `json:"result"`
+	Errors []Base.Errors                              `json:"errors"`
+}
+
 type DeleteDockerRegistryResponse struct {
 	Code   int    `json:"code"`
 	Status string `json:"status"`

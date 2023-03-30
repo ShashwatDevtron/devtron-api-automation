@@ -14,6 +14,7 @@ type StructDockerRegRouter struct {
 	saveDockerRegistryResponseDto ResponseDTOs.SaveDockerRegistryResponseDto
 	deleteDockerRegistryResponse  ResponseDTOs.DeleteDockerRegistryResponse
 	dockerRequestDTOs             RequestDTOs.SaveDockerRegistryRequestDTO
+	allDockerRequestDTOs          ResponseDTOs.GetAllDockerRegistryResponseDto
 }
 
 func (structDockerRegRouter StructDockerRegRouter) UnmarshalGivenResponseBody(response []byte, apiName string) StructDockerRegRouter {
@@ -22,6 +23,8 @@ func (structDockerRegRouter StructDockerRegRouter) UnmarshalGivenResponseBody(re
 		json.Unmarshal(response, &structDockerRegRouter.deleteDockerRegistryResponse)
 	case SaveDockerRegistryApi:
 		json.Unmarshal(response, &structDockerRegRouter.saveDockerRegistryResponseDto)
+	case GetAllDockerRegistry:
+		json.Unmarshal(response, &structDockerRegRouter.allDockerRequestDTOs)
 	}
 	return structDockerRegRouter
 }
@@ -101,6 +104,33 @@ func HitDeleteDockerRegistryApi(byteValueOfStruct []byte, authToken string) Resp
 	structDockerRegRouter := StructDockerRegRouter{}
 	dockerRegRouter := structDockerRegRouter.UnmarshalGivenResponseBody(resp.Body(), DeleteDockerRegistry)
 	return dockerRegRouter.deleteDockerRegistryResponse
+}
+
+func HitGetDockerRegistryApi(authToken string, Id string) ResponseDTOs.SaveDockerRegistryResponseDto {
+	resp, err := Base.MakeApiCall(GetADockerRegistryApiUrl+Id, http.MethodGet, "", nil, authToken)
+	Base.HandleError(err, GetDockerRegistry)
+
+	structDockerRegRouter := StructDockerRegRouter{}
+	dockerRegRouter := structDockerRegRouter.UnmarshalGivenResponseBody(resp.Body(), SaveDockerRegistryApi)
+	return dockerRegRouter.saveDockerRegistryResponseDto
+}
+
+func HitUpdateRegistryApi(authToken string, payloadOfApi []byte) ResponseDTOs.SaveDockerRegistryResponseDto {
+	resp, err := Base.MakeApiCall(SaveDockerRegistryApiUrl, http.MethodPut, string(payloadOfApi), nil, authToken)
+	Base.HandleError(err, UpdateDockerRegistry)
+
+	structDockerRegRouter := StructDockerRegRouter{}
+	dockerRegRouter := structDockerRegRouter.UnmarshalGivenResponseBody(resp.Body(), UpdateDockerRegistry)
+	return dockerRegRouter.saveDockerRegistryResponseDto
+}
+
+func HitGetAllDockerRegistryApi(authToken string) ResponseDTOs.GetAllDockerRegistryResponseDto {
+	resp, err := Base.MakeApiCall(SaveDockerRegistryApiUrl, http.MethodGet, "", nil, authToken)
+	Base.HandleError(err, GetAllDockerRegistry)
+
+	structDockerRegRouter := StructDockerRegRouter{}
+	dockerRegRouter := structDockerRegRouter.UnmarshalGivenResponseBody(resp.Body(), GetAllDockerRegistry)
+	return dockerRegRouter.allDockerRequestDTOs
 }
 
 type DockersRegRouterTestSuite struct {
