@@ -1,4 +1,0 @@
-package CreateUpdateDeleteGitAccount
-
-//
-//func getAllGitAccounts()

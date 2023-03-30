@@ -1,4 +1,4 @@
-package gitProRouter
+package GitProviderFullFlow
 
 import (
 	"github.com/stretchr/testify/suite"

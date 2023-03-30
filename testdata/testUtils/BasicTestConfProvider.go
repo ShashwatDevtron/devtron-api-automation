@@ -260,7 +260,7 @@ func ReadEventStreamsForSpecificApi(apiUrl string, authToken string, ContainerNa
 	}()
 
 	for i := 0; i < 3; i++ {
-		msg, err := wait(events, time.Second*60)
+		msg, err := Wait(events, time.Second*60)
 		require.Nil(t, err)
 		if i == 0 {
 			assert.True(t, strings.Contains(string(msg.Data), ContainerName))
@@ -294,7 +294,7 @@ func ReadEventStreamsForSpecificApiAndVerifyResult(apiUrl string, authToken stri
 	}()
 
 	for i := 0; i <= indexOfMessage; i++ {
-		msg, err := wait(events, time.Second*60)
+		msg, err := Wait(events, time.Second*60)
 		require.Nil(t, err)
 		fmt.Println(i, "=====>", string(msg.Data))
 		if i == indexOfMessage {
@@ -304,7 +304,7 @@ func ReadEventStreamsForSpecificApiAndVerifyResult(apiUrl string, authToken stri
 	assert.Nil(t, cErr)
 }
 
-func wait(ch chan *sse.Event, duration time.Duration) (*sse.Event, error) {
+func Wait(ch chan *sse.Event, duration time.Duration) (*sse.Event, error) {
 	var err error
 	var msg *sse.Event
 	select {

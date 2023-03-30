@@ -1,50 +1,88 @@
-package gitProRouter
+package GitProviderRouter
 
 import (
-	"automation-suite/gitProRouter/RequestDTOs"
-	"automation-suite/gitProRouter/ResponseDTOs"
+	"automation-suite/GitProviderRouter/RequestDTOs"
+	"automation-suite/GitProviderRouter/ResponseDTOs"
 	Base "automation-suite/testUtils"
 	"encoding/json"
 	"github.com/stretchr/testify/suite"
 	"net/http"
+	"strconv"
 )
 
 type StructGitProRouter struct {
+	getGitProviderResponse     ResponseDTOs.GetGitProviderResponseDto
 	saveGitProviderResponseDto ResponseDTOs.SaveGitProviderResponseDto
 	gitRequestDTOs             RequestDTOs.SaveGitProviderRequestDTO
 	deleteGitProviderResponse  ResponseDTOs.DeleteGitProviderResponse
 	updateGitProviderResponse  ResponseDTOs.SaveGitProviderResponseDto
+	GetGitProviderResponseById ResponseDTOs.GetGitProviderResponseById
 }
 
 func (structGitRegRouter StructGitProRouter) UnmarshalGivenResponseBody(response []byte, apiName string) StructGitProRouter {
 	switch apiName {
-	case SaveGitProvideApi:
+	case GetGitProvider:
+		json.Unmarshal(response, &structGitRegRouter.getGitProviderResponse)
+	case SaveGitProviderApi:
 		json.Unmarshal(response, &structGitRegRouter.saveGitProviderResponseDto)
+	case UpdateGitProvider:
+		json.Unmarshal(response, &structGitRegRouter.saveGitProviderResponseDto)
+	case DeleteGitProvider:
+		json.Unmarshal(response, &structGitRegRouter.deleteGitProviderResponse)
+	case GetGitProviderById:
+		json.Unmarshal(response, &structGitRegRouter.GetGitProviderResponseById)
 	}
+
 	return structGitRegRouter
 }
 
-func GetGitProviderRequestDto() RequestDTOs.SaveGitProviderRequestDTO {
+func HitGetGitProviderApi(authToken string) ResponseDTOs.GetGitProviderResponseDto {
+	resp, err := Base.MakeApiCall(GitProviderApiUrl, http.MethodGet, "", nil, authToken)
+	Base.HandleError(err, GetGitProvider)
+
+	structGitProRouter := StructGitProRouter{}
+	githubProRouter := structGitProRouter.UnmarshalGivenResponseBody(resp.Body(), GetGitProvider)
+	return githubProRouter.getGitProviderResponse
+}
+
+func HitGetGitProviderByIdApi(appId int, authToken string) ResponseDTOs.GetGitProviderResponseById {
+	appIdStr := strconv.Itoa(appId)
+	resp, err := Base.MakeApiCall(GitProviderApiUrl+"/"+appIdStr, http.MethodGet, "", nil, authToken)
+	Base.HandleError(err, GetGitProviderById)
+
+	structGitProRouter := StructGitProRouter{}
+	githubProRouter := structGitProRouter.UnmarshalGivenResponseBody(resp.Body(), GetGitProviderById)
+	return githubProRouter.GetGitProviderResponseById
+}
+
+func GetGitProviderRequestDto(GitRegHostId int) RequestDTOs.SaveGitProviderRequestDTO {
 	var saveGitProviderRequestDto RequestDTOs.SaveGitProviderRequestDTO
 	envConf := Base.ReadBaseEnvConfig()
 	file := Base.ReadAnyJsonFile(envConf.ClassCredentialsFile)
 	saveGitProviderRequestDto.Id = 0
-	saveGitProviderRequestDto.GitHostId = file.GitHubOrgId
+	saveGitProviderRequestDto.GitHostId = GitRegHostId
 	saveGitProviderRequestDto.Active = true
 	saveGitProviderRequestDto.Url = file.GitHubProjectUrl
 	saveGitProviderRequestDto.AuthMode = file.AuthMode
-	saveGitProviderRequestDto.Name = file.Name
+	if file.AuthMode == "SSH" {
+		saveGitProviderRequestDto.SshPrivateKey = file.SshPrivateKey
+	}
+	if file.AuthMode == "USERNAME_PASSWORD" {
+		saveGitProviderRequestDto.Password = file.Password
+	}
+	saveGitProviderRequestDto.Name = file.GitProviderName
 	return saveGitProviderRequestDto
 }
 
 func HitSaveGitProviderApi(payloadOfApi []byte, authToken string) ResponseDTOs.SaveGitProviderResponseDto {
-	resp, err := Base.MakeApiCall(SaveGitProviderApiUrl, http.MethodPost, string(payloadOfApi), nil, authToken)
-	Base.HandleError(err, SaveGitProvideApi)
+	resp, err := Base.MakeApiCall(GitProviderApiUrl, http.MethodPost, string(payloadOfApi), nil, authToken)
+	Base.HandleError(err, SaveGitProviderApi)
 
-	structDockerRegRouter := StructGitProRouter{}
-	githubProRouter := structDockerRegRouter.UnmarshalGivenResponseBody(resp.Body(), SaveGitProvideApi)
+	structGitProRouter := StructGitProRouter{}
+	githubProRouter := structGitProRouter.UnmarshalGivenResponseBody(resp.Body(), SaveGitProviderApi)
 	return githubProRouter.saveGitProviderResponseDto
 }
+
 func GetPayLoadForUpdateGitProviderAPI(id int, gitHostId int) []byte {
 	var saveGitProviderRequestDto RequestDTOs.SaveGitProviderRequestDTO
 	envConf := Base.ReadBaseEnvConfig()
@@ -54,18 +92,18 @@ func GetPayLoadForUpdateGitProviderAPI(id int, gitHostId int) []byte {
 	saveGitProviderRequestDto.Active = true
 	saveGitProviderRequestDto.Url = file.GitHubProjectUrl
 	saveGitProviderRequestDto.AuthMode = file.AuthMode
-	saveGitProviderRequestDto.Name = file.Name
+	saveGitProviderRequestDto.Name = file.GitProviderUpdatedName
 	byteValueOfStruct, _ := json.Marshal(saveGitProviderRequestDto)
 	return byteValueOfStruct
 }
 
 func HitUpdateGitProviderApi(byteValueOfStruct []byte, authToken string) ResponseDTOs.SaveGitProviderResponseDto {
-	resp, err := Base.MakeApiCall(SaveGitProviderApiUrl, http.MethodPut, string(byteValueOfStruct), nil, authToken)
+	resp, err := Base.MakeApiCall(GitProviderApiUrl, http.MethodPut, string(byteValueOfStruct), nil, authToken)
 	Base.HandleError(err, UpdateGitProvider)
 
 	structGitProRouter := StructGitProRouter{}
 	gitProRouter := structGitProRouter.UnmarshalGivenResponseBody(resp.Body(), UpdateGitProvider)
-	return gitProRouter.updateGitProviderResponse
+	return gitProRouter.saveGitProviderResponseDto
 }
 
 func GetPayLoadForDeleteGitProviderAPI(id int, gitHostId int, url string, authMode string, name string) []byte {
@@ -81,7 +119,7 @@ func GetPayLoadForDeleteGitProviderAPI(id int, gitHostId int, url string, authMo
 }
 
 func HitDeleteGitProviderApi(byteValueOfStruct []byte, authToken string) ResponseDTOs.DeleteGitProviderResponse {
-	resp, err := Base.MakeApiCall(SaveGitProviderApiUrl, http.MethodDelete, string(byteValueOfStruct), nil, authToken)
+	resp, err := Base.MakeApiCall(GitProviderApiUrl, http.MethodDelete, string(byteValueOfStruct), nil, authToken)
 	Base.HandleError(err, DeleteGitProvider)
 
 	structGitProRouter := StructGitProRouter{}

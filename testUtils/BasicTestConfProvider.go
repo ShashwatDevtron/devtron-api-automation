@@ -76,7 +76,7 @@ type BaseClassEnvironmentConfig struct {
 	GitUsername            string `json:"GIT_USERNAME"`
 	Host                   string `json:"HOST"`
 	GitToken               string `json:"GIT_TOKEN"`
-	GitHubOrgId            int    `json:"GITHUB_ORG_ID"`
+	GitHubOrgId            string `json:"GITHUB_ORG_ID"`
 	PluginId               string `json:"PLUGIN_ID"`
 	RegistryType           string `json:"REGISTRY_TYPE"`
 	RegistryUrl            string `json:"REGISTRY_URL"`
@@ -93,7 +93,8 @@ type BaseClassEnvironmentConfig struct {
 	SshPrivateKey          string `json:"SSH_PRIVATE_KEY"`
 	AccessToken            string `json:"ACCESS_TOKEN"`
 	AuthMode               string `json:"AUTH_MODE"`
-	Name                   string `json:"NAME"`
+	GitProviderName        string `json:"GIT_PROVIDER_NAME"`
+	GitProviderUpdatedName string `json:"GIT_PROVIDER_UPDATED_NAME"`
 }
 
 func getRestyClient() *resty.Client {
