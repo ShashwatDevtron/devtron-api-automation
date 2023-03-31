@@ -63,4 +63,10 @@ func (suite *ApplicationsRouterTestSuite) TestClassGetTerminalSession() {
 	//PipelineConfigRouter.DeleteAppWithCiCd(suite.authToken)
 }
 
+func (suite *ApplicationsRouterTestSuite) TestClassGetLogs() {
+	suite.Run("A=5=GetLogs", func() {
+		suite.HitCheckLogsApi("")
+	})
+}
+
 //todo will add other test cases once Devs will handle the validations
