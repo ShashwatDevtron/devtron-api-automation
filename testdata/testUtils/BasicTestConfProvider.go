@@ -274,7 +274,7 @@ func ReadEventStreamsForSpecificApi(apiUrl string, authToken string, ContainerNa
 	assert.Nil(t, cErr)
 }
 
-func ReadEventStreamsForSpecificApiAndVerifyResult(apiUrl string, authToken string, t *testing.T, indexOfMessage int, message string) {
+func ReadEventStreamsForSpecificApiAndVerifyResult(apiUrl string, authToken string, t *testing.T, indexOfMessage int, message string, ignoreBlankSpaces bool) {
 	baseConfig := ReadBaseEnvConfig()
 	fileData := ReadAnyJsonFile(baseConfig.BaseCredentialsFile)
 	url := fileData.BaseServerUrl + apiUrl
@@ -293,12 +293,27 @@ func ReadEventStreamsForSpecificApiAndVerifyResult(apiUrl string, authToken stri
 		})
 	}()
 
-	for i := 0; i <= indexOfMessage; i++ {
-		msg, err := Wait(events, time.Second*60)
-		require.Nil(t, err)
-		fmt.Println(i, "=====>", string(msg.Data))
-		if i == indexOfMessage {
-			assert.Equal(t, string(msg.Data), message)
+	if ignoreBlankSpaces {
+		for i := 0; i <= indexOfMessage; {
+			msg, err := Wait(events, time.Second*60)
+			require.Nil(t, err)
+			if string(msg.Data) != "" {
+				fmt.Println(i, "=====>", string(msg.Data))
+				if i == indexOfMessage {
+					// Check if the message data contains "checkout commit"
+					assert.Contains(t, string(msg.Data), message)
+				}
+				i++
+			}
+		}
+	} else {
+		for i := 0; i <= indexOfMessage; i++ {
+			msg, err := Wait(events, time.Second*60)
+			require.Nil(t, err)
+			fmt.Println(i, "=====>", string(msg.Data))
+			if i == indexOfMessage {
+				assert.Equal(t, string(msg.Data), message)
+			}
 		}
 	}
 	assert.Nil(t, cErr)

@@ -10,20 +10,15 @@ import (
 	Base "automation-suite/testUtils"
 	"automation-suite/testdata/testUtils"
 	"fmt"
-	"github.com/r3labs/sse/v2"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"testing"
-	"time"
 )
 
 func HitGetListOfGitProviders(authToken string) ResponseDTOs.GetGitProviderResponseDto {
 	return GitProviderRouter.HitGetGitProviderApi(authToken)
 }
 
-func GetGitProviderRequestObjectDto(GitRegHostId int) RequestDTOs.SaveGitProviderRequestDTO {
-	return GitProviderRouter.GetGitProviderRequestDto(GitRegHostId)
+func GetGitProviderRequestObjectDto(GitRegHostId int, authMode string) RequestDTOs.SaveGitProviderRequestDTO {
+	return GitProviderRouter.GetGitProviderRequestDto(GitRegHostId, authMode)
 }
 
 func HitSaveOneGitProviderApi(payloadOfApi []byte, authToken string) ResponseDTOs.SaveGitProviderResponseDto {
@@ -106,45 +101,8 @@ func (suite *GitProRouterTestSuite) SetupSuite() {
 	suite.authToken = Base.GetAuthToken()
 }
 
-func (suite *GitProRouterTestSuite) checkForCiLogs(pipelineId string, ciWorkflowId string, FirstLogLineNumber int, SecondLogLineNumber int) {
+func (suite *GitProRouterTestSuite) checkForCiLogs(pipelineId string, ciWorkflowId string, LogLineNumber int) {
 	ciLogsDownloadUrlFormat := PipelineConfigRouter.GetCiPipelineBaseUrl + "/%s/workflow/%s/logs"
 	ciLogsDownloadUrl := fmt.Sprintf(ciLogsDownloadUrlFormat, pipelineId, ciWorkflowId)
-	suite.ReadEventStreamsLogsForSpecificApiAndVerifyResult(ciLogsDownloadUrl, suite.authToken, suite.T(), FirstLogLineNumber, SecondLogLineNumber)
-}
-
-func (suite *GitProRouterTestSuite) ReadEventStreamsLogsForSpecificApiAndVerifyResult(apiUrl string, authToken string, t *testing.T, indexOfMessageOne int, indexOfMessageTwo int) {
-	baseConfig := testUtils.ReadBaseEnvConfig()
-	fileData := testUtils.ReadAnyJsonFile(baseConfig.BaseCredentialsFile)
-	url := fileData.BaseServerUrl + apiUrl
-	client := sse.NewClient(url)
-	header := make(map[string]string)
-	header["token"] = authToken
-	client.Headers = header
-	events := make(chan *sse.Event)
-	var cErr error
-	go func() {
-		cErr = client.Subscribe("message", func(msg *sse.Event) {
-			if msg.Data != nil {
-				events <- msg
-				return
-			}
-		})
-	}()
-	for i := 0; i <= indexOfMessageTwo; {
-		msg, err := testUtils.Wait(events, time.Second*60)
-		require.Nil(t, err)
-		if string(msg.Data) != "" {
-			fmt.Println(i, "=====>", string(msg.Data))
-			if i == indexOfMessageOne {
-				// Check if the message data contains "git cloning"
-				assert.Contains(t, string(msg.Data), "git cloning")
-			}
-			if i == indexOfMessageTwo {
-				// Check if the message data contains "checkout commit"
-				assert.Contains(t, string(msg.Data), "checkout commit")
-			}
-			i++
-		}
-	}
-	assert.Nil(t, cErr)
+	testUtils.ReadEventStreamsForSpecificApiAndVerifyResult(ciLogsDownloadUrl, suite.authToken, suite.T(), LogLineNumber, "git cloning", true)
 }

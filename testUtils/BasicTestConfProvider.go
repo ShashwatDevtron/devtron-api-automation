@@ -91,6 +91,7 @@ type BaseClassEnvironmentConfig struct {
 	DockerfileRepository   string `json:"DOCKER_FILE_REPO" `
 	DockerfileRelativePath string `json:"DOCKER_FILE_RELATIVE_PATH"`
 	SshPrivateKey          string `json:"SSH_PRIVATE_KEY"`
+	GitAccountPassword     string `json:"GIT_ACCOUNT_PASSWORD"`
 	AccessToken            string `json:"ACCESS_TOKEN"`
 	AuthMode               string `json:"AUTH_MODE"`
 	GitProviderName        string `json:"GIT_PROVIDER_NAME"`

@@ -55,7 +55,7 @@ func HitGetGitProviderByIdApi(appId int, authToken string) ResponseDTOs.GetGitPr
 	return githubProRouter.GetGitProviderResponseById
 }
 
-func GetGitProviderRequestDto(GitRegHostId int) RequestDTOs.SaveGitProviderRequestDTO {
+func GetGitProviderRequestDto(GitRegHostId int, authMode string) RequestDTOs.SaveGitProviderRequestDTO {
 	var saveGitProviderRequestDto RequestDTOs.SaveGitProviderRequestDTO
 	envConf := Base.ReadBaseEnvConfig()
 	file := Base.ReadAnyJsonFile(envConf.ClassCredentialsFile)
@@ -63,12 +63,12 @@ func GetGitProviderRequestDto(GitRegHostId int) RequestDTOs.SaveGitProviderReque
 	saveGitProviderRequestDto.GitHostId = GitRegHostId
 	saveGitProviderRequestDto.Active = true
 	saveGitProviderRequestDto.Url = file.GitHubProjectUrl
-	saveGitProviderRequestDto.AuthMode = file.AuthMode
-	if file.AuthMode == "SSH" {
+	saveGitProviderRequestDto.AuthMode = authMode
+	if authMode == "SSH" {
 		saveGitProviderRequestDto.SshPrivateKey = file.SshPrivateKey
 	}
-	if file.AuthMode == "USERNAME_PASSWORD" {
-		saveGitProviderRequestDto.Password = file.Password
+	if authMode == "USERNAME_PASSWORD" {
+		saveGitProviderRequestDto.Password = file.GitAccountPassword
 	}
 	saveGitProviderRequestDto.Name = file.GitProviderName
 	return saveGitProviderRequestDto
